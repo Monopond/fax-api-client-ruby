@@ -141,23 +141,95 @@ class MonopondSOAPClientV2
 
   def sendFax (sendFaxRequest)
     @response = @client.call(:send_fax, xml: SendFaxRequestEnvelope.new.to_s(sendFaxRequest, @wssetoken))
-    #TODO return MonopondSendFaxResponse.new()
+    return MonopondSendFaxResponse.new(@response.body[:send_fax_response])
   end
 
   def faxStatus (faxStatusRequest)
+    @message = {}
 
+    unless faxStatusRequest.broadcastRef.nil?
+      @message["BroadcastRef"] = faxStatusRequest.broadcastRef
+    end
+
+    unless faxStatusRequest.messageRef.nil?
+      @message["MessageRef"] = faxStatusRequest.messageRef
+    end
+
+    unless faxStatusRequest.sendRef.nil?
+      @message["sendRef"] = faxStatusRequest.sendRef
+    end
+
+    unless faxStatusRequest.verbosity.nil?
+      @message["Verbosity"] = faxStatusRequest.verbosity
+    end
+
+    @response = @client.call(:fax_status, message:@message)
   end
 
   def stopFax (stopFaxRequest)
+    @message = {}
 
+    unless stopFaxRequest.broadcastRef.nil?
+      @message["BroadcastRef"] = stopFaxRequest.broadcastRef
+    end
+
+    unless stopFaxRequest.messageRef.nil?
+      @message["MessageRef"] = stopFaxRequest.messageRef
+    end
+
+    unless stopFaxRequest.sendRef.nil?
+      @message["sendRef"] = stopFaxRequest.sendRef
+    end
+
+    unless stopFaxRequest.verbosity.nil?
+      @message["Verbosity"] = stopFaxRequest.verbosity
+    end
+
+    @response = @client.call(:stop_fax, message:@message)
   end
 
   def pauseFax (pauseFaxRequest)
+    @message = {}
 
+    unless pauseFaxRequest.broadcastRef.nil?
+      @message["BroadcastRef"] = pauseFaxRequest.broadcastRef
+    end
+
+    unless pauseFaxRequest.messageRef.nil?
+      @message["MessageRef"] = pauseFaxRequest.messageRef
+    end
+
+    unless pauseFaxRequest.sendRef.nil?
+      @message["sendRef"] = pauseFaxRequest.sendRef
+    end
+
+    unless pauseFaxRequest.verbosity.nil?
+      @message["Verbosity"] = pauseFaxRequest.verbosity
+    end
+
+    @response = @client.call(:pause_fax, message:@message)
   end
 
   def resumeFax (resumeFaxRequest)
+    @message = {}
 
+    unless resumeFaxRequest.broadcastRef.nil?
+      @message["BroadcastRef"] = resumeFaxRequest.broadcastRef
+    end
+
+    unless resumeFaxRequest.messageRef.nil?
+      @message["MessageRef"] = resumeFaxRequest.messageRef
+    end
+
+    unless resumeFaxRequest.sendRef.nil?
+      @message["sendRef"] = resumeFaxRequest.sendRef
+    end
+
+    unless resumeFaxRequest.verbosity.nil?
+      @message["Verbosity"] = resumeFaxRequest.verbosity
+    end
+
+    @response = @client.call(:resume_fax, message:@message)
   end
 end
 
@@ -195,11 +267,11 @@ end
 class MonopondFaxDetailsResponse
   attr_accessor :sendFrom, :resolution, :retries, :busyRetries, :headerFormat
   def initialize (response)
-    @sendFrom = response.sendFrom
-    @resolution = response.resolution
-    @retries = response.retries
-    @busyRetries = response.busyRetries
-    @headerFormat = response.headerFormat
+    @sendFrom = response[:@send_from]
+    @resolution = response[:@resolution]
+    @retries = response[:@retries]
+    @busyRetries = response[:@busy_retries]
+    @headerFormat = response[:@header_format]
   end
 end
 
@@ -207,22 +279,22 @@ class MonopondFaxResultsResponse
   attr_accessor :attempt, :result, :error, :cost, :pages,
                 :scheduledStartTime, :dateCallStarted, :dateCallEnded
   def initialize (response)
-    @attempt = response.attempt
-    @result = response.result
-    @error = response.error
-    @cost = response.cost
-    @pages = response.pages
-    @scheduledStartTime = response.scheduledStartTime
-    @dateCallStarted = response.dateCallStarted
-    @dateCallEnded = response.dateCallEnded
+    @attempt = response[:@attempt]
+    @result = response[:@result]
+    @error = response[:@error]
+    @cost = response[:@cost]
+    @pages = response[:@pages]
+    @scheduledStartTime = response[:@scheduled_start_time]
+    @dateCallStarted = response[:@date_call_started]
+    @dateCallEnded = response[:@date_call_ended]
   end
 end
 
 class MonopondFaxErrorResponse
   attr_accessor :code, :name
   def initialize (response)
-    @code = response.code
-    @name = response.name
+    @code = response[:@code]
+    @name = response[:@name]
   end
 end
 
@@ -230,19 +302,19 @@ class MonopondFaxMessageResponse
   attr_accessor :status, :sendTo, :broadcastRef, :sendRef,
                 :messageRef, :faxDetails, :faxResults
   def initialize (response)
-    @status = response.status
-    @sendTo = response.sendTo
-    @broadcastRef = response.broadcastRef
-    @sendRef = response.sendRef
-    @messageRef = response.messageRef
+    @status = response[:@status]
+    @sendTo = response[:@send_to]
+    @broadcastRef = response[:@broadcast_ref]
+    @sendRef = response[:@send_ref]
+    @messageRef = response[:@message_ref]
 
-    unless response.faxDetails.nil?
-      @faxDetails = MonopondFaxDetailsResponse.new(response.faxDetails)
+    unless response[:@fax_details].nil?
+      @faxDetails = MonopondFaxDetailsResponse.new(response[:@fax_details])
     end
 
-    unless response.faxResults.nil?
+    unless response[:@fax_results].nil?
       @faxResults = []
-      for faxResult in response.faxResults
+      for faxResult in response[:@fax_results]
         faxResult << MonopondFaxResultsResponse.new(faxResult)
       end
     end
@@ -263,40 +335,45 @@ class MonopondSendFaxResponse
   attr_accessor :faxMessages
   def initialize (response)
     @faxMessages = []
-    for faxMessage in response[:fax_messages]
-      faxMessages << MonopondFaxMessageResponse.new(faxMessage)
+    @faxes = (response[:fax_messages][:fax_message])
+    if @faxes.class == Array
+      for faxMessage in @faxes
+        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
+      end
+    else
+      @faxMessages << MonopondFaxMessageResponse.new(@faxes)
     end
   end
 end
 
 class MonopondFaxStatusRequest
-
+  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
 end
 
 class MonopondFaxStatusResponse
-
+  attr_accessor :faxStatusTotals, :faxResultsTotals, :faxMessages
 end
 
 class MonopondStopFaxRequest
-
+  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
 end
 
 class MonopondStopFaxResponse
-
+  attr_accessor :faxStatusTotals, :faxResultsTotals, :faxMessages
 end
 
 class MonopondPauseFaxRequest
-
+  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
 end
 
 class MonopondPauseFaxResponse
-
+  attr_accessor :faxStatusTotals, :faxResultsTotals, :faxMessages
 end
 
 class MonopondResumeFaxRequest
-
+  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
 end
 
 class MonopondResumeFaxResponse
-
+  attr_accessor :faxStatusTotals, :faxResultsTotals, :faxMessages
 end
