@@ -1,0 +1,861 @@
+﻿Building A Request
+To use Monopond SOAP Ruby Client, start by including the MonopondSOAPClient.rb (line 1) then creating an instance of the client by supplying your credentials (line 4). Your username and password should be enclosed in quotation marks.
+Monopond SOAP Ruby Client uses the following gems: savon and builder. Please check the Gemfile is included.
+1. require_relative ‘monopondSOAPClient’
+2.     
+3.     // TODO: Enter your own credentials here
+4.     @wsseToken = WSSEToken.new('username', 'password')
+5.     @client = MonopondSOAPClientV2.new(@wsseToken, MPENV::LOCAL)
+6.     
+7.     // TODO: Set up your request here
+8. ?>
+
+
+SendFax Request
+SendFax Request allows you to send fax/es on the platform.
+Sending a single fax:
+To send a fax to a single destination, a request similar to the following example can be used:       
+1.     // TODO: Setup Document
+2.     @document = MonopondDocument.new('test.txt','VGhpcyBpcyBhIGZheA==')
+                  // ’filename’, ‘base64’
+1.     @document.order = 0;
+2.  
+3.     // TODO: Setup FaxMessage
+4.     @faxMessage = MonopondFaxMessage.new('msg-ref-1', '6011111111')
+                                                        // ‘messageRef’, ‘sendTo’        
+1.     @faxMessage.sendFrom = 'Test Fax'
+2.     @faxMessage.resolution = 'normal'
+3.     @faxMessage.retries = 0
+4.     @faxMessage.busyRetries = 2
+5.     
+6.     // TODO: Setup FaxSendRequest 
+7.     @faxMessages = []
+8.     @faxMessages << @faxMessage
+9. 10.     @documents = []
+11.     @documents << @document
+12. 13.     @request = MonopondSendFaxRequest.new(@faxMessages, @documents)
+14.     @request.resolution = 'fine'
+15.     @request.broadcastRef = "broadcast-ref-1"
+16. 17.     // Call send fax method
+18.     @sendRespone = @client.sendFax(@request)
+19.     
+Sending multiple faxes:
+To send faxes to multiple destinations, a request similar to the following example can be used. Please note the addition of another “FaxMessage”:
+1.     // TODO: Setup Document
+2.     @document = MonopondDocument.new('test.txt','VGhpcyBpcyBhIGZheA==')
+                  // ’filename’, ‘base64’
+1.     @document.order = 0;
+2.     @document1 = MonopondDocument.new('test1.txt','VGhpcyBpcyBhIGZheA==')
+3.     @document2 = MonopondDocument.new('test2.txt','VGhpcyBpcyBhIGZheA==')
+4. 5.     @documents = []
+6.     @documents << @document 
+7.     @documents << @document1
+8.     @documents << @document2  
+9. 10.     // TODO: Setup FaxMessage
+11.     @faxMessage = MonopondFaxMessage.new('msg-ref-1', '6011111111')
+                                                        // ‘messageRef’, ‘sendTo’        
+1.     @faxMessage.sendFrom = 'Test Fax'
+2.     @faxMessage.resolution = 'normal'
+3.     @faxMessage.retries = 0
+4.     @faxMessage.documents = @documents
+5.     @faxMessage.busyRetries = 2
+6. 7.     // TODO: Setup FaxSendRequest 
+8.     @faxMessages = []
+9.     @faxMessages << @faxMessage
+10. 11.     @request = MonopondSendFaxRequest.new(@faxMessages, [])
+12.     @request.resolution = 'fine'
+13.     @request.broadcastRef = "broadcast-ref-1"
+14. 15.     // Call send fax method
+16.     @sendRespone = @client.sendFax(@request)
+17. 
+
+
+
+________________
+
+
+Sending faxes to multiple destinations with the same document (broadcasting):
+To send the same fax content to multiple destinations (broadcasting), a request similar to the example below can be used. 
+This method is recommended for broadcasting as it takes advantage of the multiple tiers in the send request. This eliminates the repeated parameters out of the individual fax message elements which are instead inherited from the parent send fax request. 
+
+
+1.    // TODO: Setup Document
+2.     @document = MonopondDocument.new('test.txt','VGhpcyBpcyBhIGZheA==')
+                  // ’filename’, ‘base64’
+1.     @document.order = 0;
+2.  
+3.     // TODO: Setup FaxMessage
+4.     @faxMessage = MonopondFaxMessage.new('msg-ref-1', '6011111111')
+                                                        // ‘messageRef’, ‘sendTo’        
+1.     @faxMessage.sendFrom = 'Test Fax'
+2.     @faxMessage.resolution = 'normal'
+3.     @faxMessage.retries = 0
+4.     @faxMessage.busyRetries = 2
+5. 6.     @faxMessage1 = MonopondFaxMessage.new('msg-ref-1', '6011111112')
+7.     @faxMessage1.sendFrom = 'Test Fax'
+8.     @faxMessage1.resolution = 'normal'
+9.     @faxMessage1.retries = 0
+10.     @faxMessage1.busyRetries = 2
+11. 12.     @faxMessage2 = MonopondFaxMessage.new('msg-ref-1', '6011111113')
+13.     @faxMessage2.sendFrom = 'Test Fax'
+14.     @faxMessage2.resolution = 'normal'
+15.     @faxMessage2.retries = 0
+16.     @faxMessage2.busyRetries = 2
+17. 18.     // TODO: Setup FaxSendRequest 
+19.     @faxMessages = []
+20.     @faxMessages << @faxMessage
+21.     @faxMessages << @faxMessage1
+22.     @faxMessages << @faxMessage2
+23. 24.     @documents = []
+25.     @documents << @document
+26. 27.     @request = MonopondSendFaxRequest.new(@faxMessages, @documents)
+28.     @request.resolution = 'fine'
+29.     @request.broadcastRef = "broadcast-ref-1"
+30. 31.     // Call send fax method
+32.     @sendRespone = @client.sendFax(@request)
+33. 
+
+MonopondSendFaxRequest Parameters:
+Name
+	Required
+	Type
+	Description
+	Default
+	BroadcastRef
+	
+
+	String
+	Allows the user to tag all faxes in this request with a user-defined broadcast reference. These faxes can then be retrieved at a later point based on this reference.
+	
+
+	SendRef
+	
+
+	String
+	Similar to the BroadcastRef, this allows the user to tag all faxes in this request with a send reference. The SendRef is used to represent all faxes in this request only, so naturally it must be unique.
+	
+
+	FaxMessages
+	x
+	Array of FaxMessage
+	FaxMessages describe each individual fax message and its destination. See below for details.
+	
+
+	SendFrom
+	
+
+	Alphanumeric String
+	A customisable string used to identify the sender of the fax. Also known as the Transmitting Subscriber identification (TSID). The maximum string length is 32 characters.
+	Fax
+	Documents
+	x
+	Array of FaxDocument
+	Each FaxDocument object describes a fax document to be sent. Multiple documents can be defined here which will be concatenated and sent in the same message. See below for details.
+	
+
+	Resolution
+	
+
+	Resolution
+	Resolution quality of the fax document. This option may incur additional costs. Please contact your account manager for more information. See below for a list of possible values.
+	normal
+	ScheduledStartTime
+	
+
+	DateTime
+	The date and time the transmission of the fax will start.
+	Current time (immediate sending)
+	Retries
+	
+
+	Unsigned Integer
+	The number of times to retry sending the fax if it fails. Each account has a maximum number of retries that can be changed by consultation with your account manager.
+	Account default
+	BusyRetries
+	
+
+	Unsigned Integer
+	Certain fax errors such as “NO_ANSWER” or “BUSY” are not included in the above retries limit and can be set separately. Each account has a maximum number of busy retries that can be changed by consultation with your account manager.
+	Account default
+	HeaderFormat
+	
+
+	String
+	Allows the header format that appears at the top of the transmitted fax to be changed. See below for an explanation of how to format this field.
+	From: X, To: X
+	
+
+MonopondFaxMessage Parameters:
+This represents a single fax message being sent to a destination.
+Name
+	Required
+	Type
+	Description
+	Default
+	MessageRef
+	x
+	String
+	A unique user-provided identifier that is used to identify the fax message. This can be used at a later point to retrieve the results of the fax message.
+	
+
+	SendTo
+	x
+	String
+	The phone number the fax message will be sent to.
+	
+
+	SendFrom
+	
+
+	Alphanumeric String
+	A customisable string used to identify the sender of the fax. Also known as the Transmitting Subscriber identification (TSID). The maximum string length is 32 characters.
+	Empty
+	Documents
+	x
+	Array of FaxDocument
+	Each FaxDocument object describes a fax document to be sent. Multiple documents can be defined here which will be concatenated and sent in the same message. See below for details.
+	
+
+	Resolution
+	
+
+	Resolution
+	Resolution quality of the fax document. This option may incur additional costs. Please contact your account manager for more information. See below for a list of possible values.
+	normal
+	ScheduledStartTime
+	
+
+	DateTime
+	The date and time the transmission of the fax will start.
+	Current time (immediate sending)
+	Retries
+	
+
+	Unsigned Integer
+	The number of times to retry sending the fax if it fails. Each account has a maximum number of retries that can be changed by consultation with your account manager.
+	Account default
+	BusyRetries
+	
+
+	Unsigned Integer
+	Certain fax errors such as “NO_ANSWER” or “BUSY” are not included in the above retries limit and can be set separately. Each account has a maximum number of busy retries that can be changed by consultation with your account manager.
+	Account default
+	HeaderFormat
+	
+
+	String
+	Allows the header format that appears at the top of the transmitted fax to be changed. See below for an explanation of how to format this field.
+	From: X, To: X
+	MonopondFaxDocument Parameters:
+Represents a fax document to be sent through the system. Supported file types are: PDF, TIFF, PNG, JPG, GIF, TXT, PS, RTF, DOC, DOCS, XLS, XLSX, PPT, PPTX.
+
+
+Name
+	Required
+	Type
+	Description
+	Default
+	FileName
+	x
+	String
+	The document filename including extension. This is important as it is used to help identify the document MIME type.
+	
+
+	FileData
+	x
+	Base64
+	The document encoded in Base64 format.
+	
+
+	Order
+	
+
+	Integer
+	If multiple documents are defined on a message, this value will determine the order in which they will be transmitted.
+	0
+	
+
+Resolution Levels:
+Value
+	Description
+	normal
+	Normal standard resolution (98 scan lines per inch)
+	fine
+	Fine resolution (196 scan lines per inch)
+	
+
+Header Format:
+Determines the format of the header line that is printed on the top of the transmitted fax message. This is set to “From %from%, To %to%| %a %b %d %H:%M %Y” by default which produces the following:
+From TSID, To 61022221234        Mon Aug 28 15:32 2012                                1 of 1
+The following variables can be used in the format string:
+Value
+	Description
+	%from%
+	The value of the SendFrom field in the message
+	%to%
+	The value of the SendTo field in the message
+	%a
+	Weekday name (abbreviated)
+	%A
+	Weekday name
+	%b
+	Month name (abbreviated)
+	%B
+	Month name
+	%d
+	Day of the month as a decimal (01 - 31)
+	%m
+	Month as a decimal (01 - 12)
+	%y
+	Year as a decimal (abbreviated)
+	%Y
+	Year as a decimal
+	%H
+	Hour as a decimal using 24-hour clock (00 - 23)
+	%I
+	Hour as a decimal using 12-hour clock (01 - 12)
+	%M
+	Minute as a decimal (00 - 59)
+	%S
+	Second as a decimal (00 - 59)
+	%p
+	AM or PM
+	%j
+	Day of the year as a decimal (001 - 366)
+	%U
+	Week of the year as a decimal (Sunday as first day of the week) (00 - 53)
+	%W
+	Week of the year as a decimal (Monday as first day of the week) (00 - 53)
+	%w
+	Day of the week as a decimal (0 - 6) (Sunday being 0)
+	%%
+	A literal % character
+	
+
+MonopondSendFaxResponse:
+The response received from a MonopondSendFaxRequest matches the response you receive when calling the FaxStatus method call with a “send” verbosity level.
+________________
+FaxStatus Request
+This function provides you with a method of retrieving the status, details, and results of fax messages sent. While this is a legitimate method of retrieving results, we strongly advise that you take advantage of our callback service, which will push these fax results to you as they are completed.
+When making a status request, you must provide at least a BroadcastRef, SendRef, or MessageRef. The function will also accept a combination of these to further narrow the request query.
+* Limiting by a BroadcastRef allows you to retrieve faxes contained in a group of send requests
+* Limiting by SendRef allows you to retrieve faxes contained in a single send request
+* Limitting by MessageRef allows you to retrieve a single fax message
+There are multiple levels of verbosity available in the request; these are explained in detail below. You can also find full examples below.
+MonopondFaxStatusRequest Parameters:
+Name
+	Required
+	Type
+	Description
+	Default
+	BroadcastRef
+	
+
+	String
+	User-defined broadcast reference
+	
+
+	SendRef
+	
+
+	String
+	User-defined send reference
+	
+
+	MessageRef
+	
+
+	String 
+	User-defined message reference
+	
+
+	Verbosity
+	
+
+	String
+	The level of detail in the status response. Please see below for a list of possible values.
+	brief
+	
+
+Verbosity Levels:
+Value
+	Description
+	brief
+	Gives you an overall view of the messages. This simply shows very high-level statistics, consisting of counts of how many faxes are at each status (i.e. processing, queued, sending) and totals of the results of these faxes (success, failed, blocked).
+	send
+	Includes the results from “brief” while also including an itemised list of each fax message in the request
+	details
+	Includes the results from “send” along with details of the parameters used to send the fax messages
+	results
+	Includes the results from “send” along with the sending results of the fax messages
+	all
+	Includes the results from both “details” and “results” along with some extra uncommon fields
+	
+
+
+
+________________
+
+
+Status Request with “brief” verbosity:
+1.     // TODO: Setup FaxStatusRequest 
+2.     @faxStatusRequest = MonopondFaxStatusRequest.new
+3.     @faxStatusRequest.messageRef = "Testing-message-1"
+4. 1.     // Call fax status method
+2.     @faxStatus = @client.faxStatus(@faxStatusRequest)
+3. 
+
+Status Request with “send” verbosity:
+1.     // TODO: Setup FaxStatusRequest 
+2.     @faxStatusRequest = MonopondFaxStatusRequest.new
+3.     @faxStatusRequest.broadcastRef = "Broadcast-test-1"
+4.     @faxStatusRequest.verbosity = "send"
+5. 1.     // Call fax status method
+2.     @faxStatus = @client.faxStatus(@faxStatusRequest)
+3. 
+
+Status Request with “details” verbosity:
+1.     // TODO: Setup FaxStatusRequest 
+2.     @faxStatusRequest = MonopondFaxStatusRequest.new
+3.     @faxStatusRequest.sendRef = "Send-Ref-1"
+4.     @faxStatusRequest.verbosity = "details"
+5. 1.     // Call fax status method
+2.     @faxStatus = @client.faxStatus(@faxStatusRequest)
+3. 
+
+Status Request with “results” verbosity:
+1.     // TODO: Setup FaxStatusRequest 
+2.     @faxStatusRequest = MonopondFaxStatusRequest.new
+3.     @faxStatusRequest.broadcastRef = "Broadcast-test-1"
+4.     @faxStatusRequest.sendRef = "Send-Ref-1"
+5.     @faxStatusRequest.verbosity = "results"
+6. 1.     // Call fax status method
+2.     @faxStatus = @client.faxStatus(@faxStatusRequest)
+3. 4. 
+
+
+
+________________
+
+
+MonopondFaxStatus Response:
+The response received depends entirely on the verbosity level specified.
+Name
+	Type
+	Verbosity
+	Description
+	FaxStatusTotals
+	FaxStatusTotals
+	brief
+	Counts of how many faxes are at each status. See below for more details.
+	FaxResultsTotals
+	FaxResultsTotals
+	brief
+	Totals of the end results of the faxes. See below for more details.
+	FaxMessages
+	Array of FaxMessage
+	send
+	List of each fax in the query. See below for more details.
+	MonopondFaxStatusTotals:
+Contains the total count of how many faxes are at each status.
+Name
+	Type
+	Verbosity
+	Description
+	pending
+	Long
+	brief
+	Fax is pending on the system and waiting to be processed.
+	processing
+	Long
+	brief
+	Fax is in the initial processing stages.
+	queued
+	Long
+	brief
+	Fax has finished processing and is queued, ready to send out at the send time.
+	starting
+	Long 
+	brief
+	Fax is ready to be sent out.
+	sending
+	Long
+	brief
+	Fax has been spooled to our servers and is in the process of being sent out.
+	pausing
+	Long 
+	brief
+	Fax has been told to pause.
+	paused
+	Long
+	brief
+	Fax is currently paused.
+	resuming
+	Long
+	brief
+	Fax has been told to resume. After the resume has been confirmed, it is set back to the “sending” status.
+	stopping
+	Long
+	brief
+	Fax has been told to stop. After the stop has been confirmed, it is set to the “finalizing” status.
+	finalizing
+	Long
+	brief
+	Fax has finished sending and the results are being processed.
+	done
+	Long
+	brief
+	Fax has completed and no further actions will take place. The detailed results are available at this status.
+	
+
+________________
+
+
+MonopondFaxResultsTotals:
+Contains the total count of how many faxes ended in each result, as well as some additional totals.
+Name
+	Type
+	Verbosity
+	Description
+	success
+	Long
+	brief
+	Fax has successfully been delivered to its destination.
+	blocked
+	Long
+	brief
+	Destination number was found in one of the blocklists
+	failed
+	Long
+	brief
+	Fax failed getting to its destination.
+	totalAttempts
+	Long
+	brief
+	Total attempts made in the reference context
+	totalFaxDuration
+	Long
+	brief
+	Total time spent on the line in the reference context
+	totalPages
+	Long
+	brief
+	Total pages sent in the reference context
+	MonopondFaxMessages:
+The response received depends entirely on the verbosity level specified.
+Name
+	Type
+	Verbosity
+	Description
+	messageRef
+	String
+	send
+	
+
+	sendRef
+	String
+	send
+	
+
+	broadcastRef
+	String
+	send
+	
+
+	sendTo
+	String
+	send
+	
+
+	status
+	
+
+	send
+	The current status of the fax message. See the FaxStatus table above for possible status values.
+	FaxDetails
+	FaxDetails
+	details
+	Contains the details and settings the fax was sent with. See below for more details.
+	FaxResults
+	Array of FaxResult
+	results
+	Contains the results of each attempt at sending the fax message and their connection details. See below for more details.
+	MonopondFaxDetails:
+Name
+	Type
+	Verbosity
+	Description
+	sendFrom
+	Alphanumeric String
+	details
+	
+
+	resolution
+	String
+	details
+	
+
+	retries
+	Integer
+	details
+	
+
+	busyRetries
+	Integer
+	details
+	
+
+	headerFormat
+	String 
+	details
+	
+
+	MonopondFaxResults:
+Name
+	Type
+	Verbosity
+	Description
+	attempt
+	Integer
+	results
+	The attempt number of the FaxResult
+	result
+	String
+	results
+	The result of the fax message. See the FaxResults table above for possible values
+	Error
+	FaxError
+	results
+	The fax error code if the fax was not successful. See below for all possible values
+	cost
+	BigDecimal
+	results
+	The final cost of the fax message
+	pages
+	Integer
+	results
+	Total pages sent to the end fax machine.
+	scheduledStartTime
+	DateTime
+	results
+	The date and time the fax is scheduled to start.
+	dateCallStarted
+	DateTime
+	results
+	Date and time the fax started transmitting
+	dateCallEnded
+	DateTime
+	results
+	Date and time the fax finished transmitting
+	
+
+MonopondFaxError:
+Value
+	Error Name
+	DOCUMENT_UNSUPPORTED
+	Unsupported document type
+	DOCUMENT_FAILED_CONVERSION
+	Document failed conversion
+	FUNDS_INSUFFICIENT
+	Insufficient funds
+	FUNDS_FAILED
+	Failed to transfer funds
+	BLOCK_ACCOUNT
+	Number cannot be sent from this account
+	BLOCK_GLOBAL
+	Number found in the Global blocklist
+	BLOCK_SMART
+	Number found in the Smart blocklist
+	BLOCK_DNCR
+	Number found in the DNCR blocklist
+	BLOCK_CUSTOM
+	Number found in a user specified blocklist
+	FAX_NEGOTIATION_FAILED
+	Negotiation failed
+	FAX_EARLY_HANGUP
+	Early hang-up on call
+	FAX_INCOMPATIBLE_MACHINE
+	Incompatible fax machine
+	FAX_BUSY
+	Phone number busy
+	FAX_NUMBER_UNOBTAINABLE
+	Number unobtainable
+	FAX_BUSY
+	Phone number busy
+	FAX_NUMBER_UNOBTAINABLE
+	Number unobtainable
+	FAX_SENDING_FAILED
+	Sending fax failed
+	FAX_CANCELLED
+	Cancelled
+	FAX_NO_ANSWER
+	No answer
+	FAX_UNKNOWN
+	Unknown fax error
+	
+
+
+
+
+
+________________
+
+
+StopFax Request
+Stops a fax message from sending. This fax message must either be paused, queued, starting or sending. Please note that fax cannot be stopped if the fax is currently in the process of being transmitted to the destination device.
+When making a stop request, you must provide at least a BroadcastRef, SendRef, or MessageRef. The function will also accept a combination of these to further narrow the request query.
+MonopondStopFaxRequest Parameters:
+Name
+	Required
+	Type
+	Description
+	Default
+	BroadcastRef
+	
+
+	String
+	User-defined broadcast reference
+	
+
+	SendRef
+	
+
+	String
+	User-defined send reference
+	
+
+	MessageRef
+	
+
+	String 
+	User-defined message reference
+	
+
+	
+
+StopFax Request limiting by BroadcastRef:
+1.     // TODO: Setup StopFaxRequest
+2.     @stopFaxRequest =  MonopondStopFaxRequest.new
+3.     @stopFaxRequest.broadcastRef = "Broadcast-test-1"
+4. 5.     @stopFax = @client.stopFax(@stopFaxRequest)
+6. StopFax Request limiting by SendRef:
+1.     // TODO: Setup StopFaxRequest
+2.     @stopFaxRequest =  MonopondStopFaxRequest.new
+3.     @stopFaxRequest->SendRef = "Send-Ref-1"
+4. 5.     @stopFax = @client.stopFax(@stopFaxRequest)
+6. StopFax Request limiting by MessageRef:
+1.     // TODO: Setup StopFaxRequest
+2.     @stopFaxRequest =  MonopondStopFaxRequest.new
+3.     @stopFaxRequest.messageRef = "Testing-message-1"
+4. 5.     @stopFax = @client.stopFax(@stopFaxRequest)
+6. 
+
+MonopondStopFax Response:
+The response received from a StopFaxRequest matches the response you receive when calling the FaxStatus method call with a “send” verbosity level.
+
+
+PauseFax Request
+Pauses a fax message before it starts transmitting. This fax message must either be queued, starting or sending. Please note that fax cannot be paused if the message is currently being transmitted to the destination device.
+When making a pause request, you must provide at least a BroadcastRef, SendRef, or MessageRef. The function will also accept a combination of these to further narrow the request query.
+MonopondPauseFaxRequest Parameters:
+Name
+	Required
+	Type
+	Description
+	Default
+	BroadcastRef
+	
+
+	String
+	User-defined broadcast reference
+	
+
+	SendRef
+	
+
+	String
+	User-defined send reference
+	
+
+	MessageRef
+	
+
+	String 
+	User-defined message reference
+	
+
+	
+
+PauseFax Request limiting by BroadcastRef:
+1.     // TODO: Setup PauseFaxRequest
+2.     @pauseFaxRequest =  MonopondPauseFaxRequest.new
+3.     @pauseFaxRequest.broadcastRef = "Broadcast-test-1"
+4. 5.     @pauseFax = @client.pauseFax(@pauseFaxRequest)
+6. PauseFax Request limiting by SendRef:
+1.     // TODO: Setup PauseFaxRequest
+2.     @pauseFaxRequest =  MonopondPauseFaxRequest.new
+3.     @pauseFaxRequest->SendRef = "Send-Ref-1"
+4. 5.     @pauseFax = @client.pauseFax(@pauseFaxRequest)
+6. PauseFax Request limiting by MessageRef:
+1.     // TODO: Setup PauseFaxRequest
+2.     @pauseFaxRequest = MonopondPauseFaxRequest.new
+3.     @pauseFaxRequest.messageRef = "Testing-message-1"
+4. 5.     @pauseFax = @client.pauseFax(@pauseFaxRequest)
+6. 
+
+MonopondPauseFax Response:
+The response received from a PauseFaxRequest matches the response you receive when calling the FaxStatus method call with a “send” verbosity level.
+
+
+ResumeFax Request
+Resumes a paused fax message. This fax message must be in the paused status.
+When making a resume request, you must provide at least a BroadcastRef, SendRef, or MessageRef. The function will also accept a combination of these to further narrow the request query.
+MonopondResumeFaxRequest Parameters:
+Name
+	Required
+	Type
+	Description
+	Default
+	BroadcastRef
+	
+
+	String
+	User-defined broadcast reference
+	
+
+	SendRef
+	
+
+	String
+	User-defined send reference
+	
+
+	MessageRef
+	
+
+	String 
+	User-defined message reference
+	
+
+	
+
+ResumeFax Request limiting by BroadcastRef:
+1.     // TODO: Setup ResumeFaxRequest
+2.     @resumeFaxRequest = MonopondResumeFaxRequest.new
+3.     @resumeFaxRequest.broadcastRef = "Broadcast-test-1"
+4. 5.     @resumeFax = @client.resumeFax(@resumeFaxRequest)
+6.     
+ResumeFax Request limiting by SendRef:
+1.     // TODO: Setup ResumeFaxRequest
+2.     @resumeFaxRequest = MonopondResumeFaxRequest.new
+3.     @resumeFaxRequest->SendRef = "Send-Ref-1"
+4. 5.     @resumeFax = @client.resumeFax(@resumeFaxRequest)
+6. ResumeFax Request limiting by MessageRef:
+1.     // TODO: Setup ResumeFaxRequest
+2.     @resumeFaxRequest = MonopondResumeFaxRequest.new
+3.     @resumeFaxRequest.messageRef = "Testing-message-1"
+4. 5.     @resumeFax = @client.resumeFax(@resumeFaxRequest)
+6. 
+
+MonopondResumeFax Response:
+The response received from a ResumeFaxRequest matches the response you receive when calling the FaxStatus method call with a “send” verbosity level.
