@@ -285,7 +285,7 @@ class MonopondFaxResultsResponse
   def initialize (response)
     @attempt = response[:@attempt]
     @result = response[:@result]
-    @error = response[:@error]
+    @error = MonopondFaxErrorResponse.new(response[:@error])
     @cost = response[:@cost]
     @pages = response[:@pages]
     @scheduledStartTime = response[:@scheduled_start_time]
