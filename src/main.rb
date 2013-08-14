@@ -2,9 +2,9 @@ require_relative 'monopondSOAPClient'
 
 class Main
 
-  @wsseToken = WSSEToken.new('timtest', 'gnome4life')
+  @wsseToken = WSSEToken.new('username', 'password')
 
-  @client = MonopondSOAPClientV2.new(@wsseToken, MPENV::LOCAL)
+  @client = MonopondSOAPClientV2.new(@wsseToken, MPENV::PRODUCTION)
   printf("%s \n \n", @client.client.operations)
 
   #sample for send fax
