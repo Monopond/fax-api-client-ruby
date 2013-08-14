@@ -33,17 +33,6 @@ class MonopondSOAPClientV2
         }
         @xml.tag!("soapenv:Body") {
           @xml.tag!("v2:SendFaxRequest"){
-            @xml.Documents {
-              for document in sendFaxRequest.documents
-                @xml.Document{ |doc|
-                  doc.FileName(document.fileName);
-                  doc.FileData(document.fileData);
-                  unless document.order.nil?
-                    doc.Order(document.order);
-                  end
-                }
-              end
-            }
 
             @xml.FaxMessages {
               for faxMessage in sendFaxRequest.faxMessages
@@ -131,6 +120,20 @@ class MonopondSOAPClientV2
 
             unless sendFaxRequest.headerFormat.nil?
               @xml.HeaderFormat(sendFaxRequest.headerFormat)
+            end
+
+            unless sendFaxRequest.documents.nil?
+              @xml.Documents {
+                for document in sendFaxRequest.documents
+                  @xml.Document{ |doc|
+                    doc.FileName(document.fileName);
+                    doc.FileData(document.fileData);
+                    unless document.order.nil?
+                      doc.Order(document.order);
+                    end
+                  }
+                end
+              }
             end
 
           }
