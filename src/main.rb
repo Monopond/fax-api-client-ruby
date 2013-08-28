@@ -47,13 +47,11 @@ class Main
 
   #sample for pause fax
   @request = MonopondPauseFaxRequest.new
-  @request.verbosity = "send"
   @request.messageRef= "msg-ref-1"
   @response = @client.pauseFax(@request)
 
   #sample for resume fax
   @request = MonopondResumeFaxRequest.new
-  @request.verbosity = "all"
   @request.broadcastRef= "broadcast-ref-1"
   @response = @client.resumeFax(@request)
 end

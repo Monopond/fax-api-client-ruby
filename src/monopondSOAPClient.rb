@@ -159,7 +159,7 @@ class MonopondSOAPClientV2
     end
 
     unless faxStatusRequest.sendRef.nil?
-      @message["sendRef"] = faxStatusRequest.sendRef
+      @message["SendRef"] = faxStatusRequest.sendRef
     end
 
     unless faxStatusRequest.verbosity.nil?
@@ -182,11 +182,7 @@ class MonopondSOAPClientV2
     end
 
     unless stopFaxRequest.sendRef.nil?
-      @message["sendRef"] = stopFaxRequest.sendRef
-    end
-
-    unless stopFaxRequest.verbosity.nil?
-      @message["Verbosity"] = stopFaxRequest.verbosity
+      @message["SendRef"] = stopFaxRequest.sendRef
     end
 
     @response = @client.call(:stop_fax, message:@message)
@@ -204,11 +200,7 @@ class MonopondSOAPClientV2
     end
 
     unless pauseFaxRequest.sendRef.nil?
-      @message["sendRef"] = pauseFaxRequest.sendRef
-    end
-
-    unless pauseFaxRequest.verbosity.nil?
-      @message["Verbosity"] = pauseFaxRequest.verbosity
+      @message["SendRef"] = pauseFaxRequest.sendRef
     end
 
     @response = @client.call(:pause_fax, message:@message)
@@ -226,11 +218,7 @@ class MonopondSOAPClientV2
     end
 
     unless resumeFaxRequest.sendRef.nil?
-      @message["sendRef"] = resumeFaxRequest.sendRef
-    end
-
-    unless resumeFaxRequest.verbosity.nil?
-      @message["Verbosity"] = resumeFaxRequest.verbosity
+      @message["SendRef"] = resumeFaxRequest.sendRef
     end
 
     @response = @client.call(:resume_fax, message:@message)
