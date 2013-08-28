@@ -41,18 +41,18 @@ class Main
   @response = @client.faxStatus(@request)
 
   #sample for stop fax
-  @request = MonopondFaxStopRequest.new
+  @request = MonopondStopFaxRequest.new
   @request.sendRef= "send-ref-1"
   @response = @client.stopFax(@request)
 
   #sample for pause fax
-  @request = MonopondFaxPauseRequest.new
+  @request = MonopondPauseFaxRequest.new
   @request.verbosity = "send"
   @request.messageRef= "msg-ref-1"
   @response = @client.pauseFax(@request)
 
   #sample for resume fax
-  @request = MonopondFaxResumeRequest.new
+  @request = MonopondResumeFaxRequest.new
   @request.verbosity = "all"
   @request.broadcastRef= "broadcast-ref-1"
   @response = @client.resumeFax(@request)
