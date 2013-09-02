@@ -437,7 +437,7 @@ class MonopondFaxStatusResponse
 end
 
 class MonopondStopFaxRequest
-  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
+  attr_accessor :broadcastRef, :messageRef, :sendRef
 end
 
 class MonopondStopFaxResponse
@@ -453,7 +453,7 @@ class MonopondStopFaxResponse
 end
 
 class MonopondPauseFaxRequest
-  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
+  attr_accessor :broadcastRef, :messageRef, :sendRef
 end
 
 class MonopondPauseFaxResponse
@@ -469,7 +469,7 @@ class MonopondPauseFaxResponse
 end
 
 class MonopondResumeFaxRequest
-  attr_accessor :broadcastRef, :messageRef, :sendRef, :verbosity
+  attr_accessor :broadcastRef, :messageRef, :sendRef
 end
 
 class MonopondResumeFaxResponse
