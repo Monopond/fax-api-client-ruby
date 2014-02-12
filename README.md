@@ -87,7 +87,7 @@ To send faxes to multiple destinations a request similar to the following exampl
 ###Sending faxes to multiple destinations with the same document (broadcasting):
 To send the same fax content to multiple destinations (broadcasting) a request similar to the example below can be used.
 
-This method is recommended for broadcasting as it takes advantage of the multiple tiers in the send request. This eliminates the repeated properties out of the individual fax message elements which are instead inherited from the parent send fax request. An example below shows “SendFrom” being used for both FaxMessages. While not shown in the example below further control can be achieved over individual fax elements to override the properties set in the parent.
+This method is recommended for broadcasting as it takes advantage of the multiple tiers in the send request. This eliminates the repeated parameters out of the individual fax message elements which are instead inherited from the parent send fax request. An example below shows “SendFrom” being used for both FaxMessages. While not shown in the example below further control can be achieved over individual fax elements to override the parameters set in the parent.
 
 ```ruby
 // TODO: Setup Document
@@ -181,7 +181,7 @@ The example below shows a PDF that will be stamped with the text “Hello” at 
 //TODO: code here
 ```
 
-###sendFaxRequest Properties:
+###MonopondSendFaxRequest Parameters:
 **Name**|**Required**|**Type**|**Description**|**Default**
 -----|-----|-----|-----|-----
 **BroadcastRef**||String|Allows the user to tag all faxes in this request with a user-defined broadcastreference. These faxes can then be retrieved at a later point based on this reference.|
@@ -198,7 +198,7 @@ The example below shows a PDF that will be stamped with the text “Hello” at 
 **MustBeSentBeforeDate** | | DateTime |  Specifies a time the fax must be delivered by. Once the specified time is reached the fax will be cancelled across the system. | 
 **MaxFaxPages** | | Unsigned Integer |  Sets a limit on the amount of pages allowed in a single fax transmission. Especially useful if the user is blindly submitting their customer's documents to the platform. | 20
 
-***apiFaxMessage Properties:***
+***MonopondFaxMessage Parameters:***
 This represents a single fax message being sent to a destination.
 
 **Name** | **Required** | **Type** | **Description** | **Default** 
@@ -217,7 +217,7 @@ This represents a single fax message being sent to a destination.
 **MaxFaxPages** | | Unsigned Integer |  Sets a limit on the amount of pages allowed in a single fax transmission. Especially useful if the user is blindly submitting their customer's documents to the platform. | 20
 **CLI**| | String| Allows a customer called ID. Note: Must be enabled on the account before it can be used.
 
-***apiFaxDocument Properties:***
+***MonopondFaxDocument Parameters:***
 Represents a fax document to be sent through the system. Supported file types are: PDF, TIFF, PNG, JPG, GIF, TXT, PS, RTF, DOC, DOCX, XLS, XLSX, PPT, PPTX.
 
 **Name**|**Required**|**Type**|**Description**|**Default**
@@ -235,7 +235,7 @@ Represents a fax document to be sent through the system. Supported file types ar
 | **normal** | Normal standard resolution (98 scan lines per inch) |
 | **fine** | Fine resolution (196 scan lines per inch) |
 
-***Header Format:iff***
+***Header Format:***
 Determines the format of the header line that is printed on the top of the transmitted fax message.
 This is set to **rom %from%, To %to%|%a %b %d %H:%M %Y”**y default which produces the following:
 
@@ -268,7 +268,7 @@ TODO: The default value is set to: “From %from%, To %to%|%a %b %d %H:%M %Y”
 
 <a name="docMergeDataParameters"></a> 
 
-**DocMergeData Mergefield Properties:**
+**DocMergeData Mergefield Parameters:**
 
 |**Name** | **Required** | **Type** | **Description** |
 |-----|-----|-----|-----|
@@ -276,7 +276,7 @@ TODO: The default value is set to: “From %from%, To %to%|%a %b %d %H:%M %Y”
 |**Value** | | *String* | The value that replaces the key. |
 
 <a name="stampMergeDataParameters"></a> 
-**StampMergeData Mergefield Properties:**
+**StampMergeData Mergefield Parameters:**
 
 |**Name** | **Required** | **Type** | **Description** |
 |-----|-----|-----|-----|
@@ -284,31 +284,110 @@ TODO: The default value is set to: “From %from%, To %to%|%a %b %d %H:%M %Y”
 |**TextValue** |  | *StampMergeFieldTextValue* | The text value that replaces the key. |
 |**ImageValue** |  | *StampMergeFieldImageValue* | The image value that replaces the key. |
 
- **StampMergeFieldKey Properties:**
+ **StampMergeFieldKey Parameters:**
 
 | **Name** | **Required** | **Type** | **Description** |
 |----|-----|-----|-----|
 | **xCoord** |  | *Int* | X coordinate. |
 | **yCoord** |  | *Int* | Y coordinate. |
 
-**StampMergeFieldTextValue Properties:**
+**StampMergeFieldTextValue Parameters:**
 
 |**Name** | **Required** | **Type** | **Description** |
 |-----|-----|-----|-----|
 |**fontName** |  | *String* | Font name to be used. |
 |**fontSize** |  | *Decimal* | Font size to be used. |
 
-**StampMergeFieldImageValue Properties:**
+**StampMergeFieldImageValue Parameters:**
 
 |**Name** | **Required** | **Type** | **Description** |
 |-----|-----|-----|-----|
 |**fileName** |  | *String* | The document filename including extension. This is important as it is used to help identify the document MIME type. |
 |**fileData** |  | *Base64* | The document encoded in Base64 format. |
 
-###Response
+###MonopondSendFaxResponse
 The response received from a `SendFaxRequest` matches the response you receive when calling the `FaxStatus` method call with a `send` verbosity level.
 
 ###SOAP Faults
 This function will throw one of the following SOAP faults/exceptions if something went wrong:
 **InvalidArgumentsException, NoMessagesFoundException, DocumentContentTypeNotFoundException, or InternalServerException.**
 You can find more details on these faults [here](#section5).
+
+##FaxStatus
+###Description
+
+This function provides you with a method of retrieving the status, details and results of fax messages sent. While this is a legitimate method of retrieving results we strongly advise that you take advantage of our callback service, which will push these fax results to you as they are completed.
+
+When making a status request, you must provide at least a `BroadcastRef`, `SendRef` or `MessageRef`. The 
+function will also accept a combination of these to further narrow the request query.
+- Limiting by a `BroadcastRef` allows you to retrieve faxes contained in a group of send requests.
+- Limiting by `SendRef` allows you to retrieve faxes contained in a single send request.
+- Limiting by `MessageRef` allows you to retrieve a single fax message.
+
+There are multiple levels of verbosity available in the request; these are explained in detail below.
+
+###MonopondFaxStatusRequest Parameters:
+**FaxStatusRequest Properties:**
+
+| **Name** | **Required** | **Type** | **Description** |
+|--- | --- | --- | --- | ---|
+|**BroadcastRef**|  | *String* | User-defined broadcast reference. |
+|**SendRef**|  | *String* | User-defined send reference. |
+|**MessageRef**|  | *String* | User-defined message reference. |
+|**Verbosity**|  | *String* | Verbosity String The level of detail in the status response. Please see below for a list of possible values.| |
+
+**Verbosity Levels:**	
+  
+| **Value** | **Description** |
+| --- | --- |
+| **brief** | Gives you an overall view of the messages. This simply shows very high-level statistics, consisting of counts of how many faxes are at each status (i.e. processing, queued,sending) and totals of the results of these faxes (success, failed, blocked). |
+| **send** | send Includes the results from ***“brief”*** while also including an itemised list of each fax message in the request. |
+| **details** | details Includes the results from ***“send”*** along with details of the properties used to send the fax messages. |
+| **results** |Includes the results from ***“send”*** along with the sending results of the fax messages. |
+| **all** | all Includes the results from both ***“details”*** and ***“results”*** along with some extra uncommon fields. |
+
+###Sending a faxStatus Request with “brief” verbosity:
+
+```ruby
+// TODO: Setup FaxStatusRequest
+@faxStatusRequest = MonopondFaxStatusRequest.new
+@faxStatusRequest.messageRef = "Testing-message-1"
+
+// Call fax status method
+@faxStatus = @client.faxStatus(@faxStatusRequest)
+```
+
+###Status Request with “send” verbosity:
+```ruby
+// TODO: Setup FaxStatusRequest
+@faxStatusRequest = MonopondFaxStatusRequest.new
+@faxStatusRequest.broadcastRef = "Broadcast-test-1"
+@faxStatusRequest.verbosity = "send"
+
+// Call fax status method
+@faxStatus = @client.faxStatus(@faxStatusRequest)
+```
+
+###Status Request with “details” verbosity:
+```ruby
+// TODO: Setup FaxStatusRequest
+@faxStatusRequest = MonopondFaxStatusRequest.new
+@faxStatusRequest.sendRef = "Send-Ref-1"
+@faxStatusRequest.verbosity = "details"
+
+// Call fax status method
+@faxStatus = @client.faxStatus(@faxStatusRequest)
+```
+
+###Status Request with “results” verbosity:
+```ruby
+// TODO: Setup FaxStatusRequest
+@faxStatusRequest = MonopondFaxStatusRequest.new
+@faxStatusRequest.broadcastRef = "Broadcast-test-1"
+@faxStatusRequest.sendRef = "Send-Ref-1"
+@faxStatusRequest.verbosity = "results"
+
+// Call fax status method
+@faxStatus = @client.faxStatus(@faxStatusRequest)
+```
+
