@@ -108,10 +108,15 @@ class Main
   @request.broadcastRef= "broadcast-ref-1"
   #@response = @client.resumeFax(@request)
 
+  @request = MonopondSaveFaxDocumentRequest.new
+  @request.documentRef = "doc-ref-some-png";
+  @request.fileName = "logo_stamp1.png";
+  @request.fileData = "somebase64Data"
+  @response = @client.saveFaxDocument(@request)
 
   @request = MonopondDeleteFaxDocumentRequest.new
-  @request.documentRef = "testa-docref-3"
-  #@response = @client.deleteFaxDocument(@request)
+  @request.documentRef = "doc-ref-some-png"
+  @response = @client.deleteFaxDocument(@request)
 
   #@request = MonopondFaxDocumentPreviewRequest.new('doc-ref-sample-doc-8');
   @request = MonopondFaxDocumentPreviewRequest.new('doc-ref-sample-tiff-1');

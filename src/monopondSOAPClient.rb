@@ -348,6 +348,24 @@ class MonopondSOAPClientV2
     @response = @client.call(:resume_fax, message:@message)
   end
 
+  def saveFaxDocument (saveFaxDocumentRequest)
+    @message = {}
+
+    unless saveFaxDocumentRequest.documentRef.nil?
+      @message["DocumentRef"] = saveFaxDocumentRequest.documentRef
+    end
+
+    unless saveFaxDocumentRequest.fileName.nil?
+      @message["FileName"] = saveFaxDocumentRequest.fileName
+    end
+
+    unless saveFaxDocumentRequest.fileData.nil?
+      @message["FileData"] = saveFaxDocumentRequest.fileData
+    end
+
+    @response = @client.call(:save_fax_document, message:@message)
+  end
+
   def deleteFaxDocument (deleteFaxDocumentRequest)
     @message = {}
 
@@ -646,6 +664,22 @@ class MonopondResumeFaxRequest
 end
 
 class MonopondResumeFaxResponse
+  attr_accessor:faxMessages
+  def initialize (response)
+    @faxMessages = []
+    unless response[:fax_messages].nil?
+      for faxMessage in response[:fax_messages][:fax_message]
+        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
+      end
+    end
+  end
+end
+
+class MonopondSaveFaxDocumentRequest
+  attr_accessor :documentRef, :fileName, :fileData
+end
+
+class MonopondSaveFaxDocumentResponse
   attr_accessor:faxMessages
   def initialize (response)
     @faxMessages = []
