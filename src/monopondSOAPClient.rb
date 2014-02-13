@@ -10,7 +10,7 @@ class MonopondSOAPClientV2
     @client = Savon.client(wsdl: @wsdl,
         wsse_auth: [@wssetoken.username, @wssetoken.password],
         env_namespace: :soapenv,
-        namespace:'https://api.monopond.com/fax/soap/v2', namespace_identifier: :v2,
+        namespace:'https://api.monopond.com/fax/soap/v2.1', namespace_identifier: :v2,
         pretty_print_xml: true)
 
   end
@@ -21,7 +21,7 @@ class MonopondSOAPClientV2
       @xml.tag!("soapenv:Envelope",
         "xmlns:soapenv" => "http://schemas.xmlsoap.org/soap/envelope/",
         "xmlns:wsse" => "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
-        "xmlns:v2" => "https://api.monopond.com/fax/soap/v2"
+        "xmlns:v2" => "https://api.monopond.com/fax/soap/v2.1"
         ) {
         @xml.tag!("soapenv:Header") {
           @xml.tag!("wsse:Security", "soapenv:mustUnderstand" => "1") {
@@ -32,56 +32,46 @@ class MonopondSOAPClientV2
           }
         }
         @xml.tag!("soapenv:Body") {
-          @xml.tag!("v2:SendFaxRequest"){
-
+          @xml.tag!("v2:SendFaxRequest"){ |request|
+            
             @xml.FaxMessages {
               for faxMessage in sendFaxRequest.faxMessages
                 @xml.FaxMessage{ |fax|
                   fax.MessageRef(faxMessage.messageRef)
+
                   fax.SendTo(faxMessage.sendTo)
 
                   unless faxMessage.documents.nil?
                     @xml.Documents {
                       for document in faxMessage.documents
                         @xml.Document{ |doc|
-                          doc.FileName(document.fileName);
-                          doc.FileData(document.fileData);
-                          unless document.order.nil?
-                            doc.Order(document.order);
+                          MonopondRequestBuilder.new.populateDocument(document, doc);
+
+                          unless document.docMergeData.nil?
+                            @xml.DocMergeData {
+                              for mergeField in document.docMergeData
+                                @xml.MergeField { |mf|
+                                  MonopondRequestBuilder.new.populateDocMergeDataMergeField(mergeField, mf);
+                                }
+                              end
+                            }
+                          end
+
+                          unless document.stampMergeData.nil?
+                            @xml.StampMergeData {
+                              for mergeField in document.stampMergeData
+                                @xml.MergeField { |mf|
+                                  MonopondRequestBuilder.new.populateStampMergeDataMergeField(mergeField, mf);
+                                }
+                              end
+                            }
                           end
                         }
                       end
                     }
                   end
 
-                  unless faxMessage.sendFrom.nil?
-                    @xml.SendFrom(faxMessage.sendFrom)
-                  end
-
-                  unless faxMessage.resolution.nil?
-                    @xml.Resolution(faxMessage.resolution)
-                  end
-
-                  unless faxMessage.scheduledStartTime.nil?
-                    @xml.ScheduledStartTime(faxMessage.scheduledStartTime)
-                  end
-
-                  unless faxMessage.blocklists.nil?
-                    @xml.Blocklists(faxMessage.blocklists)
-                  end
-
-                  unless faxMessage.retries.nil?
-                    @xml.Retries(faxMessage.retries)
-                  end
-
-                  unless faxMessage.busyRetries.nil?
-                    @xml.BusyRetries(faxMessage.busyRetries)
-                  end
-
-                  unless faxMessage.headerFormat.nil?
-                    @xml.HeaderFormat(faxMessage.headerFormat)
-                  end
-
+                  MonopondRequestBuilder.new.populateSendFaxRequestAdditionalParams(faxMessage, fax)
                 }
               end
             }
@@ -94,51 +84,185 @@ class MonopondSOAPClientV2
               @xml.SendRef(sendFaxRequest.sendRef)
             end
 
-            unless sendFaxRequest.sendFrom.nil?
-              @xml.SendFrom(sendFaxRequest.sendFrom)
-            end
-
-            unless sendFaxRequest.resolution.nil?
-              @xml.Resolution(sendFaxRequest.resolution)
-            end
-
-            unless sendFaxRequest.scheduledStartTime.nil?
-              @xml.ScheduledStartTime(sendFaxRequest.scheduledStartTime)
-            end
-
-            unless sendFaxRequest.blocklists.nil?
-              @xml.Blocklists(sendFaxRequest.blocklists)
-            end
-
-            unless sendFaxRequest.retries.nil?
-              @xml.Retries(sendFaxRequest.retries)
-            end
-
-            unless sendFaxRequest.busyRetries.nil?
-              @xml.BusyRetries(sendFaxRequest.busyRetries)
-            end
-
-            unless sendFaxRequest.headerFormat.nil?
-              @xml.HeaderFormat(sendFaxRequest.headerFormat)
-            end
+            MonopondRequestBuilder.new.populateSendFaxRequestAdditionalParams(sendFaxRequest, request)
 
             unless sendFaxRequest.documents.nil?
-              @xml.Documents {
+               @xml.Documents {
                 for document in sendFaxRequest.documents
                   @xml.Document{ |doc|
-                    doc.FileName(document.fileName);
-                    doc.FileData(document.fileData);
-                    unless document.order.nil?
-                      doc.Order(document.order);
+                    MonopondRequestBuilder.new.populateDocument(document, doc);
+
+                    unless document.docMergeData.nil?
+                      @xml.DocMergeData {
+                        for mergeField in document.docMergeData
+                          @xml.MergeField { |mf|
+                            MonopondRequestBuilder.new.populateDocMergeDataMergeField(mergeField, mf);
+                          }
+                        end
+                      }
+                    end
+
+                    unless document.stampMergeData.nil?
+                      @xml.StampMergeData {
+                        for mergeField in document.stampMergeData
+                          @xml.MergeField { |mf|
+                            MonopondRequestBuilder.new.populateStampMergeDataMergeField(mergeField, mf);
+                          }
+                        end
+                      }
                     end
                   }
                 end
-              }
+               }
             end
 
           }
         }
       }
+    end
+  end
+
+  class FaxDocumentPreviewRequestEnvelope
+    def to_s(faxDocumentPreviewRequest, wsse)
+      @xml = Builder::XmlMarkup.new
+      @xml.tag!("soapenv:Envelope",
+        "xmlns:soapenv" => "http://schemas.xmlsoap.org/soap/envelope/",
+        "xmlns:wsse" => "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+        "xmlns:v2" => "https://api.monopond.com/fax/soap/v2.1"
+        ) {
+        @xml.tag!("soapenv:Header") {
+          @xml.tag!("wsse:Security", "soapenv:mustUnderstand" => "1") {
+            @xml.tag!("wsse:UsernameToken") {
+              @xml.tag!("wsse:Username"){ @xml.text! wsse.username }
+              @xml.tag!("wsse:Password"){ @xml.text! wsse.password }
+            }
+          }
+        }
+        @xml.tag!("soapenv:Body") {
+          @xml.tag!("v2:FaxDocumentPreviewRequest"){
+            unless faxDocumentPreviewRequest.documentRef.nil?
+              @xml.DocumentRef(faxDocumentPreviewRequest.documentRef)
+            end
+
+            unless faxDocumentPreviewRequest.resolution.nil?
+              @xml.Resolution(faxDocumentPreviewRequest.resolution)
+            end
+
+            unless faxDocumentPreviewRequest.ditheringTechnique.nil?
+              @xml.DitheringTechnique(faxDocumentPreviewRequest.ditheringTechnique)
+            end
+
+            unless faxDocumentPreviewRequest.docMergeData.nil?
+              @xml.DocMergeData {
+                for mergeField in faxDocumentPreviewRequest.docMergeData
+                  @xml.MergeField { |mf|
+                    MonopondRequestBuilder.new.populateDocMergeDataMergeField(mergeField, mf);
+                  }
+                end
+              }
+            end
+
+            unless faxDocumentPreviewRequest.stampMergeData.nil?
+              @xml.StampMergeData {
+                for mergeField in faxDocumentPreviewRequest.stampMergeData
+                  @xml.MergeField { |mf|
+                    MonopondRequestBuilder.new.populateStampMergeDataMergeField(mergeField, mf);
+                  }
+                end
+              }
+            end
+          }
+        }
+      }
+    end
+  end
+
+  class MonopondRequestBuilder
+    def populateSendFaxRequestAdditionalParams(source, dest)
+      unless source.sendFrom.nil?
+        dest.SendFrom(source.sendFrom)
+      end
+
+      unless source.resolution.nil?
+        dest.Resolution(source.resolution)
+      end
+
+      unless source.scheduledStartTime.nil?
+        dest.ScheduledStartTime(source.scheduledStartTime)
+      end
+
+      unless source.blocklists.nil?
+        dest.Blocklists(source.blocklists)
+      end
+
+      unless source.retries.nil?
+        dest.Retries(source.retries)
+      end
+
+      unless source.busyRetries.nil?
+        dest.BusyRetries(source.busyRetries)
+      end
+
+      unless source.headerFormat.nil?
+        dest.HeaderFormat(source.headerFormat)
+      end
+
+      unless source.mustBeSentBeforeDate.nil?
+        dest.MustBeSentBeforeDate(source.mustBeSentBeforeDate)
+      end
+
+      unless source.maxFaxPages.nil?
+        dest.MaxFaxPages(source.maxFaxPages)
+      end
+
+      unless source.cLI.nil?
+        dest.CLI(source.cLI)
+      end
+    end
+
+    def populateDocument (document, doc)
+      unless document.documentRef.nil?
+        doc.DocumentRef(document.documentRef);
+      end
+  
+      unless document.fileName.nil?
+        doc.FileName(document.fileName);
+      end
+    
+      unless document.fileData.nil?
+        doc.FileData(document.fileData);
+      end
+    
+      unless document.order.nil?
+        doc.Order(document.order);
+      end
+     
+      unless document.ditheringTechnique.nil?
+        doc.DitheringTechnique(document.ditheringTechnique);
+      end
+    end
+    
+    def populateDocMergeDataMergeField(mergeField, mf)
+      mf.Key(mergeField.Key);
+      mf.Value(mergeField.Value);
+    end
+
+    def populateStampMergeDataMergeField(mergeField, mf)
+      unless mergeField.key.nil?
+        mf.Key(:xCoord => mergeField.key.xCoord, :yCoord => mergeField.key.yCoord);
+      end
+
+      unless mergeField.textValue.nil?
+        mf.TextValue(mergeField.textValue.textValue, :fontName => mergeField.textValue.fontName, :fontSize => mergeField.textValue.fontSize);
+      end
+
+      unless mergeField.imageValue.nil?
+        mf.ImageValue(:width => mergeField.imageValue.width, :height => mergeField.imageValue.height) { |iv|
+          iv.FileName(mergeField.imageValue.fileName)
+
+          iv.FileData(mergeField.imageValue.fileData)
+        };
+      end
     end
   end
 
@@ -223,12 +347,27 @@ class MonopondSOAPClientV2
 
     @response = @client.call(:resume_fax, message:@message)
   end
+
+  def deleteFaxDocument (deleteFaxDocumentRequest)
+    @message = {}
+
+    unless deleteFaxDocumentRequest.documentRef.nil?
+      @message["DocumentRef"] = deleteFaxDocumentRequest.documentRef
+    end
+
+    @response = @client.call(:delete_fax_document, message:@message)
+  end
+
+  def faxDocumentPreview (faxDocumentPreviewRequest)
+    @response = @client.call(:fax_document_preview, xml: FaxDocumentPreviewRequestEnvelope.new.to_s(faxDocumentPreviewRequest, @wssetoken))
+  end
 end
 
 class MPENV
   PRODUCTION = 'https://api.monopond.com/fax/soap/v2/?wsdl'
   TEST = 'https://test.api.monopond.com/fax/soap/v2/?wsdl'
   LOCAL = 'http://localhost:8000/fax/soap/v2?wsdl'
+  LOCAL2 = 'http://localhost:8000/fax/soap/v2.1?wsdl'
 end
 
 class WSSEToken
@@ -240,7 +379,7 @@ class WSSEToken
 end
 
 class MonopondDocument
-  attr_accessor :fileName, :fileData, :order
+  attr_accessor :documentRef, :fileName, :fileData, :order, :ditheringTechnique, :docMergeData, :stampMergeData
   def initialize (fileName, fileData)
     @fileName = fileName
     @fileData = fileData
@@ -249,11 +388,45 @@ end
 
 class MonopondFaxMessage
   attr_accessor :messageRef, :sendTo, :sendFrom, :documents, :resolution,
-                :scheduledStartTime, :blocklists, :retries, :busyRetries, :headerFormat
+                :scheduledStartTime, :blocklists, :retries, :busyRetries, :headerFormat,
+		:mustBeSentBeforeDate, :maxFaxPages, :cLI
   def initialize (messageRef, sendTo)
     @messageRef = messageRef
     @sendTo = sendTo
   end
+end
+
+class MonopondDocMergeFieldKey
+  attr_accessor :Key, :Value
+  def initialize (key, value)
+    @Key = key
+    @Value = value
+  end
+end
+
+class MonopondStampMergeField
+  attr_accessor :key, :textValue, :imageValue
+end
+
+class MonopondStampMergeFieldKey
+  attr_accessor :xCoord, :yCoord
+  def initialize (xCoord, yCoord)
+    @xCoord = xCoord
+    @yCoord = yCoord
+  end
+end
+
+class MonopondStampMergeFieldTextValue
+  attr_accessor :textValue, :fontName, :fontSize
+  def initialize(textValue, fontName, fontSize)
+    @textValue = textValue
+    @fontName = fontName
+    @fontSize = fontSize
+  end
+end
+
+class MonopondStampMergeFieldImageValue
+  attr_accessor :fileName, :fileData, :width, :height
 end
 
 class MonopondFaxDetailsResponse
@@ -396,7 +569,7 @@ end
 class MonopondSendFaxRequest
   attr_accessor :broadcastRef, :sendRef, :faxMessages, :sendFrom, :documents,
                 :resolution, :scheduledStartTime, :blocklists, :retries,
-                :busyRetries, :headerFormat
+                :busyRetries, :headerFormat, :mustBeSentBeforeDate, :maxFaxPages, :cLI
   def initialize (faxMessages, documents)
     @faxMessages = faxMessages
     @documents = documents
@@ -473,6 +646,41 @@ class MonopondResumeFaxRequest
 end
 
 class MonopondResumeFaxResponse
+  attr_accessor:faxMessages
+  def initialize (response)
+    @faxMessages = []
+    unless response[:fax_messages].nil?
+      for faxMessage in response[:fax_messages][:fax_message]
+        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
+      end
+    end
+  end
+end
+
+class MonopondDeleteFaxDocumentRequest
+  attr_accessor :documentRef
+end
+
+class MonopondDeleteFaxDocumentResponse
+  attr_accessor:faxMessages
+  def initialize (response)
+    @faxMessages = []
+    unless response[:fax_messages].nil?
+      for faxMessage in response[:fax_messages][:fax_message]
+        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
+      end
+    end
+  end
+end
+
+class MonopondFaxDocumentPreviewRequest
+  attr_accessor :documentRef, :resolution, :ditheringTechnique, :docMergeData, :stampMergeData
+  def initialize (documentRef)
+    @documentRef = documentRef
+  end
+end
+
+class MonopondFaxDocumentPreviewResponse
   attr_accessor:faxMessages
   def initialize (response)
     @faxMessages = []
