@@ -13,7 +13,7 @@
 
 * Run `bundle` on your bash or command-line to download dependencies.
 
-**MonopondSOAPClientV2 **
+*MonopondSOAPClientV2*
  - the client object that hold the methods to send requests.
 Request methods: (sendFax, faxStatus, pauseFax, resumeFax, stopFax, deleteFaxDocument, faxDocumentPreview)
 
