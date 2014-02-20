@@ -310,6 +310,7 @@ class MonopondSOAPClientV2
     end
 
     @response = @client.call(:stop_fax, message:@message)
+    return MonopondStopFaxResponse.new(@response.body[:stop_fax_response])
   end
 
   def pauseFax (pauseFaxRequest)
@@ -328,6 +329,7 @@ class MonopondSOAPClientV2
     end
 
     @response = @client.call(:pause_fax, message:@message)
+    return MonopondPauseFaxResponse.new(@response.body[:pause_fax_response])
   end
 
   def resumeFax (resumeFaxRequest)
@@ -346,6 +348,7 @@ class MonopondSOAPClientV2
     end
 
     @response = @client.call(:resume_fax, message:@message)
+    return MonopondResumeFaxResponse.new(@response.body[:resume_fax_response])
   end
 
   def saveFaxDocument (saveFaxDocumentRequest)
@@ -364,6 +367,7 @@ class MonopondSOAPClientV2
     end
 
     @response = @client.call(:save_fax_document, message:@message)
+    return MonopondSaveFaxDocumentResponse.new(@response.body[:save_fax_document_response])
   end
 
   def deleteFaxDocument (deleteFaxDocumentRequest)
@@ -374,10 +378,12 @@ class MonopondSOAPClientV2
     end
 
     @response = @client.call(:delete_fax_document, message:@message)
+    return MonopondDeleteFaxDocumentResponse.new(@response.body[:delete_fax_document_response])
   end
 
   def faxDocumentPreview (faxDocumentPreviewRequest)
     @response = @client.call(:fax_document_preview, xml: FaxDocumentPreviewRequestEnvelope.new.to_s(faxDocumentPreviewRequest, @wssetoken))
+    return MonopondFaxDocumentPreviewResponse.new(@response.body[:fax_document_preview_response])
   end
 end
 
@@ -616,8 +622,12 @@ end
 class MonopondFaxStatusResponse
   attr_accessor :faxStatusTotals, :faxResultsTotals, :faxMessages
   def initialize (response)
-    @faxStatusTotals = MonopondFaxStatusTotalsResponse.new(response[:fax_status_totals])
-    @faxResultsTotals = MonopondFaxResultTotalsResponse.new(response[:fax_results_totals])
+    unless response[:fax_status_totals].nil?
+      @faxStatusTotals = MonopondFaxStatusTotalsResponse.new(response[:fax_status_totals])
+    end
+    unless response[:fax_results_totals].nil?
+      @faxResultsTotals = MonopondFaxResultTotalsResponse.new(response[:fax_results_totals])
+    end
     @faxMessages = []
     unless response[:fax_messages].nil?
       for faxMessage in response[:fax_messages][:fax_message]
@@ -632,8 +642,14 @@ class MonopondStopFaxRequest
 end
 
 class MonopondStopFaxResponse
-  attr_accessor :faxMessages
+  attr_accessor :faxMessages, :faxStatusTotals, :faxResultsTotals
   def initialize (response)
+    unless response[:fax_status_totals].nil?
+      @faxStatusTotals = MonopondFaxStatusTotalsResponse.new(response[:fax_status_totals])
+    end
+    unless response[:fax_results_totals].nil?
+      @faxResultsTotals = MonopondFaxResultTotalsResponse.new(response[:fax_results_totals])
+    end
     @faxMessages = []
     unless response[:fax_messages].nil?
       for faxMessage in response[:fax_messages][:fax_message]
@@ -648,8 +664,14 @@ class MonopondPauseFaxRequest
 end
 
 class MonopondPauseFaxResponse
-  attr_accessor :faxMessages
+  attr_accessor :faxMessages, :faxStatusTotals, :faxResultsTotals
   def initialize (response)
+    unless response[:fax_status_totals].nil?
+      @faxStatusTotals = MonopondFaxStatusTotalsResponse.new(response[:fax_status_totals])
+    end
+    unless response[:fax_results_totals].nil?
+      @faxResultsTotals = MonopondFaxResultTotalsResponse.new(response[:fax_results_totals])
+    end
     @faxMessages = []
     unless response[:fax_messages].nil?
       for faxMessage in response[:fax_messages][:fax_message]
@@ -664,8 +686,14 @@ class MonopondResumeFaxRequest
 end
 
 class MonopondResumeFaxResponse
-  attr_accessor:faxMessages
+  attr_accessor :faxMessages, :faxStatusTotals, :faxResultsTotals
   def initialize (response)
+    unless response[:fax_status_totals].nil?
+      @faxStatusTotals = MonopondFaxStatusTotalsResponse.new(response[:fax_status_totals])
+    end
+    unless response[:fax_results_totals].nil?
+      @faxResultsTotals = MonopondFaxResultTotalsResponse.new(response[:fax_results_totals])
+    end
     @faxMessages = []
     unless response[:fax_messages].nil?
       for faxMessage in response[:fax_messages][:fax_message]
@@ -696,14 +724,7 @@ class MonopondDeleteFaxDocumentRequest
 end
 
 class MonopondDeleteFaxDocumentResponse
-  attr_accessor:faxMessages
   def initialize (response)
-    @faxMessages = []
-    unless response[:fax_messages].nil?
-      for faxMessage in response[:fax_messages][:fax_message]
-        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
-      end
-    end
   end
 end
 
@@ -715,13 +736,13 @@ class MonopondFaxDocumentPreviewRequest
 end
 
 class MonopondFaxDocumentPreviewResponse
-  attr_accessor:faxMessages
+  attr_accessor :tiffPreview, :numberOfPages
   def initialize (response)
-    @faxMessages = []
-    unless response[:fax_messages].nil?
-      for faxMessage in response[:fax_messages][:fax_message]
-        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
-      end
+    unless response[:tiff_preview].nil?
+      @tiffPreview = response[:tiff_preview]
+    end
+    unless response[:tiff_preview].nil?
+      @numberOfPages = response[:number_of_pages]
     end
   end
 end
