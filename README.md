@@ -742,7 +742,7 @@ You can find more details on these faults in Section 5 of this document.You can 
 @response = @client.resumeFax(@request)
 ```
 
-##PreviewFaxDocument
+##FaxDocumentPreview
 ###Description
 
 This function provides you with a method to generate a preview of a saved document at different resolutions with various dithering settings. It returns a tiff data in base64 along with a page count.
