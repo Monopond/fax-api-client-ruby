@@ -708,14 +708,7 @@ class MonopondSaveFaxDocumentRequest
 end
 
 class MonopondSaveFaxDocumentResponse
-  attr_accessor:faxMessages
   def initialize (response)
-    @faxMessages = []
-    unless response[:fax_messages].nil?
-      for faxMessage in response[:fax_messages][:fax_message]
-        @faxMessages << MonopondFaxMessageResponse.new(faxMessage)
-      end
-    end
   end
 end
 
